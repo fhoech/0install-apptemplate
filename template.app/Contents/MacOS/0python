@@ -1,4 +1,5 @@
 #!/bin/sh
+shopt -s execfail
 if [ -x /usr/bin/python2.7 ]; then
  	exec /usr/bin/python2.7 "$@"
 elif [ -x /usr/local/bin/python2.7 ]; then
