@@ -1,0 +1,43 @@
+#!/bin/sh
+if [ -x /usr/bin/python2.7 ]; then
+ 	exec /usr/bin/python2.7 "$@"
+elif [ -x /usr/local/bin/python2.7 ]; then
+	PYTHONPATH=/Library/Python/2.7/site-packages exec /usr/local/bin/python2.7 "$@"
+elif [ -x /usr/bin/python2.6 ]; then
+	export VERSIONER_PYTHON_PREFER_32_BIT=yes
+	exec /usr/bin/python "$@"
+elif [ -x /usr/local/bin/python2.6 ]; then
+	export VERSIONER_PYTHON_PREFER_32_BIT=yes
+	PYTHONPATH=/Library/Python/2.6/site-packages exec /usr/local/bin/python "$@"
+else
+	DIR=`dirname "$0"`
+	ICON=`ls "$DIR/../Resources/"*.icns`
+	dmg=python-2.6.6-macosx10.3.dmg
+	PATH=$DIR:$PATH
+	osascript - <<__SCRIPT__
+tell application "Finder"	set result to display dialog "This application requires Python 2.6 to run." with icon file (POSIX file "$ICON" as string) buttons {"Cancel", "Download and install"} default button "Download and install"	if button returned of result is "Download and install" then		set dmg to (POSIX path of (path to downloads folder) & "$dmg")
+		set download to (dmg & ".download")		if not (dmg as POSIX file exists) and not (download as POSIX file exists) then
+			do shell script "'$DIR/notify' 'Python 2.6 is being downloaded and will be installed when the download is complete.'"
+			try				tell application "System Events" to do shell script "curl -L -k -o " & (quoted form of download) & " https://www.python.org/ftp/python/2.6.6/python-2.6.6-macosx10.3.dmg"
+			on error errmsg number errnum
+				do shell script "'$DIR/notify' " & (quoted form of errmsg)
+				display dialog errmsg with icon stop buttons {"Quit"}
+				if (download as POSIX file exists) then
+					delete (download as POSIX file)
+				end if
+			end try		end if
+		if (download as POSIX file exists) then
+			do shell script "mv " & (quoted form of download) & " " & (quoted form of dmg)
+		end if
+		if (dmg as POSIX file exists) then
+			try				do shell script "hdiutil attach '" & dmg & "' && open '/Volumes/Python 2.6.6/Python.mpkg'"
+			on error errmsg number errnum
+				do shell script "'$DIR/notify' " & (quoted form of errmsg)
+				display dialog errmsg with icon stop buttons {"Quit"}
+				delete (dmg as POSIX file)
+			end try
+		end if	end if
+end tell
+__SCRIPT__
+fi
+exit 1

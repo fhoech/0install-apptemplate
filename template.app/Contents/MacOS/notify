@@ -1,0 +1,2 @@
+#!/bin/sh
+CFProcessPath=$0 exec osascript -e "display notification \"$@\"" &> /dev/null &

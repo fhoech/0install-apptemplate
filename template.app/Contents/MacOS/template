@@ -1,0 +1,80 @@
+#!/bin/bash
+
+DIR=`dirname "$0"`
+ICON=$DIR/../Resources/`basename "$0"`.icns
+PATH=$DIR:/usr/bin:/usr/local/bin:$PATH
+ZEROINSTALL_VERSION=`echo $HOSTTYPE | grep "x86_64" &> /dev/null && echo "${ZEROINSTALL_VERSION}" || echo "1.16"`
+
+function check_0install() {
+	command -v 0install &> /dev/null && { 0install -V | grep " 2.5$" &> /dev/null || return 0; }
+	install_0install
+	return 1
+}
+
+function check_0python() {
+	0python -c "import sys; sys.exit(0)" &> /dev/null && return 0
+	return 1
+}
+
+function check_pygtk() {
+	0python -c "import pygtk" &> /dev/null && return 0
+	install_pygtk
+	return 1
+}
+
+function install_0install() {
+	installpkg "Zero Install" "0install" "ZeroInstall" "$ZEROINSTALL_VERSION"
+}
+
+function install_pygtk() {
+	installpkg "PyGTK" "PyGTK" "org.pygtk.macosx" "2.24.0"
+}
+
+function installpkg() {
+	pkg=`basename "$3-$4.pkg"`
+	osascript - <<__SCRIPT__
+tell application "Finder"
+	set result to display dialog "This application requires $1 $4 to run." with icon file (POSIX file "$ICON" as string) buttons {"Cancel", "Download and install"} default button "Download and install"
+	if button returned of result is "Download and install" then
+		set pkg to (POSIX path of (path to downloads folder) & "$pkg")
+		set download to (pkg & ".download")
+		if not (pkg as POSIX file exists) and not (download as POSIX file exists) then
+			do shell script "'$DIR/notify' '$1 $4 is being downloaded and will be installed when the download is complete.'"
+			try
+				tell application "System Events" to do shell script "curl -L -o " & (quoted form of download) & " http://sourceforge.net/projects/zero-install/files/$2/$4/$3.pkg/download"
+			on error errmsg number errnum
+				do shell script "'$DIR/notify' " & (quoted form of errmsg)
+				display dialog errmsg with icon stop buttons {"Quit"}
+				if (download as POSIX file exists) then
+					delete (download as POSIX file)
+				end if
+			end try
+		end if
+		if (download as POSIX file exists) then
+			do shell script "mv " & (quoted form of download) & " " & (quoted form of pkg)
+		end if
+		if (pkg as POSIX file exists) then
+			open pkg as POSIX file
+			tell application "Installer" to activate
+		end if
+	end if
+end tell
+__SCRIPT__
+}
+
+check_0python && check_0install && check_pygtk && {
+	shopt -s execfail
+	mkdir -p ~/Library/Logs/0launch
+	logfile=~/Library/Logs/0launch/`basename "$0"`.log
+	exec &> >(tee "$logfile")
+	DISPLAY=:0 exec ${EXEC} || {
+		log=`tail -n 3 "$logfile"` osascript - <<__SCRIPT__
+tell application "Finder"
+	set result to display dialog "An error occured. Additional information may be available in the log.\n\n" & (system attribute "log") with icon file (POSIX file "$ICON" as string) buttons {"Show log", "Quit"}
+	if button returned of result is "Show log" then
+		tell application "Console" to open POSIX file "$logfile"
+	end if
+end tell
+__SCRIPT__
+	}
+}
