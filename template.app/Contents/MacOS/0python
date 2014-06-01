@@ -1,17 +1,15 @@
 #!/bin/sh
 shopt -s execfail
-if [ -x /usr/bin/python2.7 ]; then
- 	exec /usr/bin/python2.7 "$@"
-elif [ -x /usr/local/bin/python2.7 ]; then
-	PYTHONPATH=/Library/Python/2.7/site-packages exec /usr/local/bin/python2.7 "$@"
-elif [ -x /usr/bin/python2.6 ]; then
-	export VERSIONER_PYTHON_PREFER_32_BIT=yes
-	exec /usr/bin/python "$@"
-elif [ -x /usr/local/bin/python2.6 ]; then
-	export VERSIONER_PYTHON_PREFER_32_BIT=yes
-	PYTHONPATH=/Library/Python/2.6/site-packages exec /usr/local/bin/python "$@"
+DIR=`dirname "$0"`
+if [ -x "$DIR/com.apple.Python2.7" ]; then
+ 	exec "$DIR/com.apple.Python2.7" "$@"
+elif [ -x "$DIR/org.python.Python2.7" ]; then
+	PYTHONPATH=$PYTHONPATH:/Library/Python/2.7/site-packages exec "$DIR/org.python.Python2.7" "$@"
+elif [ -x "$DIR/com.apple.Python2.6" ]; then
+	exec arch -i386 "$DIR/com.apple.Python2.6" "$@"
+elif [ -x "$DIR/org.python.Python2.6" ]; then
+	PYTHONPATH=$PYTHONPATH:/Library/Python/2.6/site-packages exec "$DIR/org.python.Python2.6" "$@"
 else
-	DIR=`dirname "$0"`
 	ICON=`ls "$DIR/../Resources/"*.icns`
 	dmg=python-2.6.6-macosx10.3.dmg
 	PATH=$DIR:$PATH
