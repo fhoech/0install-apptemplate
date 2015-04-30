@@ -6,7 +6,7 @@ LOGFILE=~/Library/Logs/0launch/`basename "$0"`.log
 exec &> >(tee "$LOGFILE")
 DIR=`dirname "$0"`
 ICON=$DIR/../Resources/`basename "$0"`.icns
-PATH=$DIR:/usr/bin:/usr/local/bin:$PATH
+PATH=$DIR:/usr/bin:/usr/local/bin:/opt/local/bin:/opt/local/sbin:$PATH
 ZEROINSTALL_VERSION=`echo $HOSTTYPE | grep "x86_64" &> /dev/null && echo "${ZEROINSTALL_VERSION}" || echo "1.16"`
 
 function check_0install() {
