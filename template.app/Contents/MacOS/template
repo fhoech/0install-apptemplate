@@ -11,6 +11,7 @@ ZEROINSTALL_VERSION=`echo $HOSTTYPE | grep "x86_64" &> /dev/null && echo "${ZERO
 
 function check_0install() {
 	command -v 0install &> /dev/null && { 0install -V | grep " 2.5$" &> /dev/null || return 0; }
+	ls /usr/local/bin/0install 2>&1 | grep "denied" > /dev/null && { osascript -e 'do shell script "chmod 755 /usr/local /usr/local/bin" with administrator privileges' && return 0 || return 1; }
 	install_0install
 	return 1
 }
