@@ -5,19 +5,15 @@ if [ -x "$DIR/com.apple.Python2.7" ]; then
  	exec "$DIR/com.apple.Python2.7" "$@"
 elif [ -x "$DIR/org.python.Python2.7" ]; then
 	PYTHONPATH=$PYTHONPATH:/Library/Python/2.7/site-packages exec "$DIR/org.python.Python2.7" "$@"
-elif [ -x "$DIR/com.apple.Python2.6" ]; then
-	exec arch -i386 "$DIR/com.apple.Python2.6" "$@"
-elif [ -x "$DIR/org.python.Python2.6" ]; then
-	PYTHONPATH=$PYTHONPATH:/Library/Python/2.6/site-packages exec "$DIR/org.python.Python2.6" "$@"
 else
 	ICON=`ls "$DIR/../Resources/"*.icns`
-	dmg=python-2.6.6-macosx10.3.dmg
+	pkg=python-2.7.11-macosx10.5.pkg
 	PATH=$DIR:$PATH
 	osascript - <<__SCRIPT__
-tell application "Finder"	set result to display dialog "This application requires Python 2.6 to run." with icon file (POSIX file "$ICON" as string) buttons {"Cancel", "Download and install"} default button "Download and install"	if button returned of result is "Download and install" then		set dmg to (POSIX path of (path to downloads folder) & "$dmg")
-		set download to (dmg & ".download")		if not (dmg as POSIX file exists) and not (download as POSIX file exists) then
-			do shell script "'$DIR/notify' 'Python 2.6 is being downloaded and will be installed when the download is complete.'"
-			try				tell application "System Events" to do shell script "curl -L -k -o " & (quoted form of download) & " https://www.python.org/ftp/python/2.6.6/python-2.6.6-macosx10.3.dmg"
+tell application "Finder"	set result to display dialog "This application requires Python 2.7 to run." with icon file (POSIX file "$ICON" as string) buttons {"Cancel", "Download and install"} default button "Download and install"	if button returned of result is "Download and install" then		set pkg to (POSIX path of (path to downloads folder) & "$pkg")
+		set download to (pkg & ".download")		if not (pkg as POSIX file exists) and not (download as POSIX file exists) then
+			do shell script "'$DIR/notify' 'Python 2.7 is being downloaded and will be installed when the download is complete.'"
+			try				tell application "System Events" to do shell script "curl -L -k -o " & (quoted form of download) & " https://www.python.org/ftp/python/2.7.11/$pkg"
 			on error errmsg number errnum
 				do shell script "'$DIR/notify' " & (quoted form of errmsg)
 				display dialog errmsg with icon stop buttons {"Quit"}
@@ -26,14 +22,14 @@ tell application "Finder"	set result to display dialog "This application requir
 				end if
 			end try		end if
 		if (download as POSIX file exists) then
-			do shell script "mv " & (quoted form of download) & " " & (quoted form of dmg)
+			do shell script "mv " & (quoted form of download) & " " & (quoted form of pkg)
 		end if
-		if (dmg as POSIX file exists) then
-			try				do shell script "hdiutil attach '" & dmg & "' && open '/Volumes/Python 2.6.6/Python.mpkg'"
+		if (pkg as POSIX file exists) then
+			try				do shell script "open '" & pkg & "'"
 			on error errmsg number errnum
 				do shell script "'$DIR/notify' " & (quoted form of errmsg)
 				display dialog errmsg with icon stop buttons {"Quit"}
-				delete (dmg as POSIX file)
+				delete (pkg as POSIX file)
 			end try
 		end if	end if
 end tell
